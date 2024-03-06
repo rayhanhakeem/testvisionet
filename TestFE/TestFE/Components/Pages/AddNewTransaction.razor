@@ -1,0 +1,63 @@
+﻿@page "/addnewtransaction"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+
+<h3>Add New Vendor</h3>
+
+<EditForm Model="@dt" OnSubmit="HandleValidSubmit" FormName="AddNewTransaction">
+
+    <div class="form-group">
+        <label for="CustomerType">Tipe Customer:</label>
+        <InputText id="CustomerType" class="form-control" @bind-Value="dt.CustomerType" />
+    </div>
+
+    <div class="form-group">
+        <label for="PointReward">Point Reward:</label>
+        <InputNumber id="PointReward" class="form-control" @bind-Value="dt.RewardPoints" />
+    </div>
+
+    <div class="form-group">
+        <label for="TotalBelanja">Total Belanja:</label>
+        <InputNumber id="TotalBelanja" class="form-control" @bind-Value="dt.TotalBelanja" />
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Add Transaction</button>
+</EditForm>
+@code {
+    private ModelDTO dt = new ModelDTO { };
+    private List<DiscountTransaction> listDt = new List<DiscountTransaction>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        listDt = await Http.GetFromJsonAsync<List<DiscountTransaction>>("https://localhost:7061/DiscountTransaction");
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var response = await Http.PostAsJsonAsync("https://localhost:7061/DiscountTransaction", dt);
+        NavigationManager.NavigateTo("/discount");
+    }
+
+    public class DiscountTransaction
+    {
+        public Guid Id { get; set; }
+        public string TransactionId { get; set; } = string.Empty;
+        public string CustomerType { get; set; } = string.Empty;
+        public int RewardPoints { get; set; }
+        public decimal TotalBelanja { get; set; }
+        public decimal Discount { get; set; }
+        public decimal TotalBayar { get; set; }
+    }
+
+    public class ModelDTO
+    {
+        public string CustomerType { get; set; } = string.Empty;
+
+        public int RewardPoints { get; set; }
+        public int TotalBelanja { get; set; }
+
+    }
+
+}
