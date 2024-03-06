@@ -17,26 +17,26 @@ namespace VisionetDiskon.Controllers
         }
 
 		[HttpPost]
-		public async Task<ActionResult> CreateTransaction(string tipeCustomer, int pointReward, int totalBelanja)
+		public async Task<ActionResult> CreateTransaction([FromBody] ModelDTO model)
 		{
             var diskon = 0m;
-			if (tipeCustomer == "platinum")
+			if (model.CustomerType == "platinum")
             {
-                if (pointReward >= 100 && pointReward <= 300) diskon= totalBelanja * 0.5m + 35;
-                else if (pointReward >= 301 && pointReward <= 500) diskon= totalBelanja * 0.5m + 50;
-                else if (pointReward > 500) diskon= totalBelanja * 0.5m + 68;
+                if (model.RewardPoints >= 100 && model.RewardPoints <= 300) diskon= model.TotalBelanja * 0.5m + 35;
+                else if (model.RewardPoints >= 301 && model.RewardPoints <= 500) diskon= model.TotalBelanja * 0.5m + 50;
+                else if (model.RewardPoints > 500) diskon= model.TotalBelanja * 0.5m + 68;
             }
-            else if (tipeCustomer == "gold")
+            else if (model.CustomerType == "gold")
             {
-                if (pointReward >= 100 && pointReward <= 300) diskon= totalBelanja * 0.25m + 25;
-                else if (pointReward >= 301 && pointReward <= 500) diskon= totalBelanja * 0.25m + 34;
-                else if (pointReward > 500) diskon= totalBelanja * 0.25m + 52;
+                if (model.RewardPoints >= 100 && model.RewardPoints <= 300) diskon= model.TotalBelanja * 0.25m + 25;
+                else if (model.RewardPoints >= 301 && model.RewardPoints <= 500) diskon= model.TotalBelanja * 0.25m + 34;
+                else if (model.RewardPoints > 500) diskon= model.TotalBelanja * 0.25m + 52;
             }
-            else if (tipeCustomer == "silver")
+            else if (model.CustomerType == "silver")
             {
-                if (pointReward >= 100 && pointReward <= 300) diskon= totalBelanja * 0.1m + 12;
-				else if (pointReward >= 301 && pointReward <= 500) diskon = totalBelanja * 0.1m + 27;
-                else if (pointReward > 500) diskon= totalBelanja * 0.1m + 39;
+                if (model.RewardPoints >= 100 && model.RewardPoints <= 300) diskon= model.TotalBelanja * 0.1m + 12;
+				else if (model.RewardPoints >= 301 && model.RewardPoints <= 500) diskon = model.TotalBelanja * 0.1m + 27;
+                else if (model.RewardPoints > 500) diskon= model.TotalBelanja * 0.1m + 39;
             }
             else
             {
@@ -60,12 +60,12 @@ namespace VisionetDiskon.Controllers
 				dt.TransactionId = $"{DateTime.Now.ToString("yyyyMMdd")}_{maxId:D5}";
 			}
 
-            dt.CustomerType = tipeCustomer;
-            dt.RewardPoints = pointReward;
+            dt.CustomerType = model.CustomerType;
+            dt.RewardPoints = model.RewardPoints;
             dt.Discount = diskon;
-            dt.TotalBelanja = totalBelanja;
+            dt.TotalBelanja = model.TotalBelanja;
 
-            dt.TotalBayar = totalBelanja - diskon;
+            dt.TotalBayar = model.TotalBelanja - diskon;
 
             _context.Transactions.Add(dt);
             await _context.SaveChangesAsync();
@@ -74,12 +74,33 @@ namespace VisionetDiskon.Controllers
 		}
 
         [HttpGet]
-        public async Task<ActionResult> GetListTransaction()
+        public async Task<ActionResult> GetListTransaction([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var getList = await _context.Transactions.ToListAsync();
-            if (getList.Count < 0) { return BadRequest("Tidak ada transaksi"); }
+            var totalRecords = await _context.Transactions.CountAsync();
+            var transactions = await _context.Transactions
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                //.Select(v=> new ModelDTO { })
+                .ToListAsync();
+            if (totalRecords <= 0) { return BadRequest("Tidak ada transaksi"); }
 
-            return Ok(getList);
+            return Ok(new PaginatedResponse<DiscountTransaction>(transactions, totalRecords, pageNumber,pageSize));
         }
 	}
+
+    public class PaginatedResponse<T>
+    {
+        public List<T> Data { get; set; }
+        public int Total { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+
+        public PaginatedResponse(List<T> data, int total, int pageNumber, int pageSize)
+        {
+            Data = data;
+            Total = total;
+            PageNumber = pageNumber;
+            PageSize = pageSize;
+        }
+    }
 }
