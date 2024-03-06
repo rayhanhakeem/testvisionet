@@ -1,0 +1,66 @@
+﻿@page "/weather"
+@attribute [StreamRendering]
+@inject HttpClient Http
+
+<PageTitle>Weather</PageTitle>
+
+<h1>Weather</h1>
+
+<p>This component demonstrates showing data.</p>
+
+@if (dt == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>TransactionId</th>
+                <th>CustomerType</th>
+                <th>RewardPoints</th>
+                <th>TotalBelanja</th>
+                <th>Discount</th>
+                <th>TotalBayar</th>
+                <th>Id</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var dete in dt)
+            {
+                <tr>
+                    <td>@dete.TransactionId</td>
+                    <td>@dete.CustomerType</td>
+                    <td>@dete.RewardPoints</td>
+                    <td>@dete.TotalBelanja</td>
+                    <td>@dete.Discount</td>
+                    <td>@dete.TotalBayar</td>
+                    <td>@dete.Id</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<DiscountTransaction> dt = new List<DiscountTransaction>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        dt = await Http.GetFromJsonAsync<List<DiscountTransaction>>("https://localhost:7061/DiscountTransaction");
+
+        StateHasChanged();
+    }
+
+    public class DiscountTransaction
+    {
+        public Guid Id { get; set; }
+        public string TransactionId { get; set; } = string.Empty;
+        public string CustomerType { get; set; } = string.Empty;
+        public int RewardPoints { get; set; }
+        public decimal TotalBelanja { get; set; }
+        public decimal Discount { get; set; }
+        public decimal TotalBayar { get; set; }
+    }
+}
