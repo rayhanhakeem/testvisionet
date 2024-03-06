@@ -74,7 +74,7 @@ namespace VisionetDiskon.Controllers
 		}
 
         [HttpGet]
-        public async Task<ActionResult> GetListTransaction([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<ActionResult<PaginatedResponse<DiscountTransaction>>> GetListTransaction([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             var totalRecords = await _context.Transactions.CountAsync();
             var transactions = await _context.Transactions
