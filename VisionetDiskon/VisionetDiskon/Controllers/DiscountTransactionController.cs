@@ -45,15 +45,19 @@ namespace VisionetDiskon.Controllers
 
 			DiscountTransaction dt = new DiscountTransaction();
 
-            if (!await _context.Transactions.AnyAsync(x => x.TransactionId.Substring(8) == "00001"))
+            var checkId = await _context.Transactions.AnyAsync(x => x.TransactionId.Substring(9) == "00001");
+
+            if (!checkId)
             {
 				var firstTransactionId = 1;
 				dt.TransactionId = $"{DateTime.Now.ToString("yyyyMMdd")}_{firstTransactionId.ToString("D5")}";
             }
             else
             {
-                var checkMaxTransactionId = await _context.Transactions.MaxAsync(x => x.TransactionId.Substring(8)) + 1;
-				dt.TransactionId = $"{DateTime.Now.ToString("yyyyMMdd")}_{checkMaxTransactionId:D5}";
+                var checkMaxTransactionId = await _context.Transactions.MaxAsync(x => x.TransactionId.Substring(9));
+                int.TryParse(checkMaxTransactionId, out var maxId);
+                maxId++;
+				dt.TransactionId = $"{DateTime.Now.ToString("yyyyMMdd")}_{maxId:D5}";
 			}
 
             dt.CustomerType = tipeCustomer;
